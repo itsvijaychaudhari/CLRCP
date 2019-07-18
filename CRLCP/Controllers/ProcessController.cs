@@ -98,9 +98,10 @@ namespace CRLCP.Controllers
 
                 if (sourcetableName.Name == "Text")
                 {
-                    List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId== langId).Select(user => user.DataId).ToList();
+                    //List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId== langId).Select(user => user.DataId).ToList();
                     if (destTableName.Name == "TextSpeech")
                     {
+                        List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId == langId).Select(user => user.DataId).ToList();
                         List<int> UserData = TextToSpeech.TextSpeech.Where(user => user.UserId == UserId).Select(user => user.DataId ).Distinct().ToList();
                         try
                         {
@@ -114,6 +115,8 @@ namespace CRLCP.Controllers
                     }
                     else if (destTableName.Name == "TextText")
                     {
+                       //langId = 24;//TODO
+                        List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId ).Select(user => user.DataId).ToList();
                         List<int> textText = textContext.TextText.Where(x => x.DatasetId == DatasetId).Select(user => user.DataId).ToList();
                         try
                         {
@@ -134,7 +137,7 @@ namespace CRLCP.Controllers
 
         }
 
-        [AllowAnonymous]
+        
         [HttpGet]
         public IActionResult GetImage(int DatasetId, int UserId)
         {
@@ -146,7 +149,17 @@ namespace CRLCP.Controllers
 
                 if (sourcetableName.Name == "Images")
                 {
-                    List<long> Images = iMAGEContext.Images.Where(x => x.DatasetId == DatasetId).Select(user => user.DataId).ToList();
+                    int langId = _context.UserInfo.FirstOrDefault(x => x.UserId == UserId).LangId1;
+                    List<long> Images;
+                    if (DatasetId == 2)//TODO
+                    {
+                        Images = iMAGEContext.Images.Where(x => x.DatasetId == DatasetId).Select(user => user.DataId).ToList();
+                    }
+                    else
+                    {
+                        Images = iMAGEContext.Images.Where(x => x.DatasetId == DatasetId && x.LangId == langId).Select(user => user.DataId).ToList();
+                    }
+                   
                     if (destTableName.Name == "ImageText")
                     {
                         List<long> UserData = imageToTextContext.ImageText.Where(user => user.UserId == UserId).Select(user => user.DataId).Distinct().ToList();
@@ -173,7 +186,7 @@ namespace CRLCP.Controllers
         [HttpPost]
         public IActionResult UploadText(int UserId, int DataId, int DatasetId, string Text,int LangId=0)
         {
-            DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Find(DatasetId);
+            DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Where(x => x.DatasetId == DatasetId).SingleOrDefault();
             SubCategories destTableName = _context.SubCategories.Find(datasetSubcategoryMapping.DestinationSubcategoryId);
 
             if (destTableName.Name == "ImageText")
@@ -184,7 +197,7 @@ namespace CRLCP.Controllers
                     {
                         UserId = UserId,
                         DataId = DataId,
-                        DomainId = iMAGEContext.Images.Find(DataId).DomainId,
+                        DomainId = iMAGEContext.Images.Where(x=>x.DataId==DataId).FirstOrDefault().DomainId,
                         OutputData = Text,
                         OutputLangId = _context.UserInfo.SingleOrDefault(x => x.UserId == UserId).LangId1,
                         DatasetId = DatasetId,
@@ -192,11 +205,11 @@ namespace CRLCP.Controllers
                     };
                     imageToTextContext.ImageText.Add(imageText);
                     imageToTextContext.SaveChanges();
-                    return Ok();
+                    return Ok(true);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    return BadRequest("false");
+                    return BadRequest(false);
                 }
             }
             else if (destTableName.Name == "TextText")
@@ -210,19 +223,19 @@ namespace CRLCP.Controllers
                         LangId = _context.UserInfo.SingleOrDefault(x => x.UserId == UserId).LangId1,
                         DomainId = _TEXTContext.Text.FirstOrDefault(x=>x.DataId==DataId).DomainId,
                         OutputData = Text,
-                        OutputLangId = LangId,
+                        OutputLangId = _context.UserInfo.SingleOrDefault(x => x.UserId == UserId).LangId1,
                         DatasetId = DatasetId,
                         AddedOn = DateTime.Now
                     };
                     textContext.TextText.Add(textText);
                     textContext.SaveChanges();
-                    return Ok();
+                    return Ok(false);
                 }
                 catch (Exception)
                 {
                 }
             }
-            return Ok("false");
+            return Ok(false);
         }
 
     }

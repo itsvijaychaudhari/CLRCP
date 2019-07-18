@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CRLCP.Dashboard;
 using CRLCP.Helper;
 using CRLCP.Models;
 using CRLCP.Models.Dashboard;
@@ -13,7 +14,7 @@ using Microsoft.Extensions.Options;
 
 namespace CRLCP.Controllers
 {
-    [AllowAnonymous]
+    [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class DashboardController : ControllerBase
@@ -24,8 +25,8 @@ namespace CRLCP.Controllers
         private TEXTContext _textContext;
         private TextToSpeechContext _textToSpeechContext;
         private IMAGEContext _imageContext;
-       private ImageToTextContext _imageToTextContext;
-       private TextToTextContext _textToTextContext;
+        private ImageToTextContext _imageToTextContext;
+        private TextToTextContext _textToTextContext;
 
        
        
@@ -47,8 +48,8 @@ namespace CRLCP.Controllers
         
 
         //POST api/Dashboard
-        [HttpPost]    //API TO GET HOMEPAGE DASHBOARD COUNTS (ADMIN HOMEPAGE)
-        public List<HomePageModel> GetHomePage([FromBody] HomePageRequestModel loginData)
+        [HttpGet]    //API TO GET HOMEPAGE DASHBOARD COUNTS (ADMIN HOMEPAGE)
+        public List<HomePageModel> GetHomePage()
         {
             List<HomePageModel> GeneralHomePageDataList = new List<HomePageModel>();
             try
@@ -110,8 +111,8 @@ namespace CRLCP.Controllers
 
 
 
-        [HttpPost]    //API TO GET HOMEPAGE DASHBOARD COUNTS user wise (ADMIN HOMEPAGE)
-        public List<UserWiseDataCountModel> GetHomePageCountUserWise([FromBody] HomePageRequestModel loginData)
+        [HttpGet]    //API TO GET HOMEPAGE DASHBOARD COUNTS user wise (ADMIN HOMEPAGE)
+        public List<UserWiseDataCountModel> GetHomePageCountUserWise()
         {
             //list of userwise data model
             List<UserWiseDataCountModel> UserWiseDataList = new List<UserWiseDataCountModel>();
@@ -119,8 +120,6 @@ namespace CRLCP.Controllers
             List<HomePageUserWiseCount> HomePageUserwiseDataList = new List<HomePageUserWiseCount>();
             try
             {
-                
-
                 //list of all datasets
                 List<Datasets> Datasets = new List<Datasets>();
                 Datasets = _context.Datasets.ToList();
@@ -192,5 +191,69 @@ namespace CRLCP.Controllers
             return UserWiseDataList;
         }
 
+        [AllowAnonymous]
+        //single user dashboard count
+        [HttpGet]
+        public IEnumerable<DashboardModel> GetUserWorkReport(int UserId)
+        {
+
+            //store result in user list
+            List<DashboardModel> userWiseDataCount = new List<DashboardModel>();
+            //get all dataset and find at destination folder using userid filter
+
+            //get dataset
+            IEnumerable<Datasets> datasets = _context.Datasets.ToList();
+
+            //get destination folders
+            IEnumerable<DatasetSubcategoryMapping> destinationList = _context.DatasetSubcategoryMapping.ToList();
+
+            foreach (var dataset in datasets)
+            {
+                int srcDbId = Convert.ToInt32(destinationList.Where(e => e.DatasetId == dataset.DatasetId).Select(e => e.SourceSubcategoryId).SingleOrDefault());
+                int destinationDbId = Convert.ToInt32(destinationList.Where(e => e.DatasetId == dataset.DatasetId).Select(e => e.DestinationSubcategoryId).SingleOrDefault());
+                
+                string srcDbname = Convert.ToString(_context.SubCategories.Where(e => e.SubcategoryId == srcDbId).Select(e => e.Name).SingleOrDefault());
+                string DestinationDBName = Convert.ToString(_context.SubCategories.Where(e => e.SubcategoryId == destinationDbId).Select(e => e.Name).SingleOrDefault());
+
+                if (srcDbname == "Text")
+                {
+                    int sourceDatasetCount = _textContext.Text.Where(e => e.DatasetId == dataset.DatasetId).Count();
+                    if (DestinationDBName == "TextSpeech")
+                    {
+                        userWiseDataCount.Add(new DashboardModel
+                        {
+                            DatasetName = dataset.Name,
+                            SrcDatasetCount = sourceDatasetCount,
+                            DestDatasetCount = _textToSpeechContext.TextSpeech.Where(x => x.DatasetId == dataset.DatasetId && x.UserId == UserId).Select(e => e).Count(),
+                        });
+                    }
+                    else if (DestinationDBName == "TextText")
+                    {
+                        userWiseDataCount.Add(new DashboardModel
+                        {
+                            DatasetName = dataset.Name,
+                            SrcDatasetCount = sourceDatasetCount,
+                            DestDatasetCount = _textToTextContext.TextText.Where(x => x.DatasetId == dataset.DatasetId && x.UserId == UserId).Select(e => e).Count(),
+                        });
+                    }
+                }
+
+                if (srcDbname == "Images")
+                {
+                    int sourceDatasetCount = _imageContext.Images.Where(e => e.DatasetId == dataset.DatasetId).Count();
+                    if (DestinationDBName == "ImageText")
+                    {
+                        userWiseDataCount.Add(new DashboardModel
+                        {
+                            DatasetName = dataset.Name,
+                            SrcDatasetCount = sourceDatasetCount,
+                            DestDatasetCount = _imageToTextContext.ImageText.Where(x => x.DatasetId == dataset.DatasetId && x.UserId == UserId).Select(e => e).Count(),
+                        });
+                    }
+
+                }
+            }
+            return userWiseDataCount;
+        }
     }
 }
