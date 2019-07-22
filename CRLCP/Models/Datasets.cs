@@ -8,5 +8,7 @@ namespace CRLCP.Models
         public int DatasetId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public int? MaxCollectionUsers { get; set; }
+        public int? MaxValidationUsers { get; set; }
     }
 }

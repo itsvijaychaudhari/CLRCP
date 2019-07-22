@@ -1,0 +1,26 @@
+TO create Scaffold from Exiting database use following command 
+
+
+name : (localdb)\MSSQLLocalDB
+
+//CRLCP_MASTER
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=CLRCP_MASTER;Persist Security Info=True;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//TEXT
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=TEXT;Persist Security Info=True;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//TextToSpeech
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=TextToSpeech;Persist Security Info=True;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//IMAGE
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=IMAGE;Persist Security Info=True;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//ImageToText
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=ImageToText;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//TextToText
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=TextToText;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+//VALIDATION_INFO
+Scaffold-DbContext "Data Source=10.208.10.142;Initial Catalog=VALIDATION_INFO;User ID=sa;Password=sa@Admin" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+

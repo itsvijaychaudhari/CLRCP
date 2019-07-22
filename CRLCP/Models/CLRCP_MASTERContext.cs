@@ -25,13 +25,14 @@ namespace CRLCP.Models
         public virtual DbSet<SourceIdMapping> SourceIdMapping { get; set; }
         public virtual DbSet<SubCategories> SubCategories { get; set; }
         public virtual DbSet<UserInfo> UserInfo { get; set; }
+        public virtual DbSet<UserLanguageMapping> UserLanguageMapping { get; set; }
 
 //        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //        {
 //            if (!optionsBuilder.IsConfigured)
 //            {
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-//                optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CLRCP_MASTER;Integrated Security=True;");
+//                optionsBuilder.UseSqlServer("Data Source=10.208.10.142;Initial Catalog=CLRCP_MASTER;Persist Security Info=True;User ID=sa;Password=sa@Admin");
 //            }
 //        }
 
@@ -70,7 +71,15 @@ namespace CRLCP.Models
 
                 entity.Property(e => e.DestinationSubcategoryId).HasColumnName("DESTINATION_SUBCATEGORY_ID");
 
+                entity.Property(e => e.DestinationSubcategoryId2).HasColumnName("DESTINATION_SUBCATEGORY_ID2");
+
+                entity.Property(e => e.DestinationSubcategoryId3).HasColumnName("DESTINATION_SUBCATEGORY_ID3");
+
                 entity.Property(e => e.SourceSubcategoryId).HasColumnName("SOURCE_SUBCATEGORY_ID");
+
+                entity.Property(e => e.SourceSubcategoryId2).HasColumnName("SOURCE_SUBCATEGORY_ID2");
+
+                entity.Property(e => e.SourceSubcategoryId3).HasColumnName("SOURCE_SUBCATEGORY_ID3");
             });
 
             modelBuilder.Entity<Datasets>(entity =>
@@ -85,6 +94,10 @@ namespace CRLCP.Models
                     .IsRequired()
                     .HasColumnName("DESCRIPTION")
                     .HasMaxLength(250);
+
+                entity.Property(e => e.MaxCollectionUsers).HasColumnName("MAX_COLLECTION_USERS");
+
+                entity.Property(e => e.MaxValidationUsers).HasColumnName("MAX_VALIDATION_USERS");
 
                 entity.Property(e => e.Name)
                     .IsRequired()
@@ -206,7 +219,9 @@ namespace CRLCP.Models
 
                 entity.ToTable("USER_INFO");
 
-                entity.Property(e => e.UserId).HasColumnName("USER_ID");
+                entity.Property(e => e.UserId)
+                    .HasColumnName("USER_ID")
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.Age).HasColumnName("AGE");
 
@@ -228,6 +243,19 @@ namespace CRLCP.Models
                     .HasMaxLength(250);
 
                 entity.Property(e => e.QualificationId).HasColumnName("QUALIFICATION_ID");
+            });
+
+            modelBuilder.Entity<UserLanguageMapping>(entity =>
+            {
+                entity.HasKey(e => e.AutoId);
+
+                entity.ToTable("USER_LANGUAGE_MAPPING");
+
+                entity.Property(e => e.AutoId).HasColumnName("AUTO_ID");
+
+                entity.Property(e => e.LanguageId).HasColumnName("LANGUAGE_ID");
+
+                entity.Property(e => e.UserId).HasColumnName("USER_ID");
             });
         }
     }

@@ -15,5 +15,6 @@ namespace CRLCP.Models
         public byte[] OutputData { get; set; }
         public int DatasetId { get; set; }
         public DateTime? AddedOn { get; set; }
+        public int? IsValid { get; set; }
     }
 }

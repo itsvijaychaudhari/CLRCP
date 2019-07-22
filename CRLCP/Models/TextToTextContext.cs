@@ -22,7 +22,7 @@ namespace CRLCP.Models
 //            if (!optionsBuilder.IsConfigured)
 //            {
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-//                optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TextToText;Integrated Security=True;");
+//                optionsBuilder.UseSqlServer("Data Source=10.208.10.142;Initial Catalog=TextToText;User ID=sa;Password=sa@Admin");
 //            }
 //        }
 
@@ -46,11 +46,9 @@ namespace CRLCP.Models
 
                 entity.Property(e => e.DomainId).HasColumnName("DOMAIN_ID");
 
-                entity.Property(e => e.LangId)
-                    .IsRequired()
-                    .HasColumnName("LANG_ID")
-                    .HasMaxLength(1)
-                    .IsUnicode(false);
+                entity.Property(e => e.IsValid).HasColumnName("IS_VALID");
+
+                entity.Property(e => e.LangId).HasColumnName("LANG_ID");
 
                 entity.Property(e => e.OutputData)
                     .IsRequired()

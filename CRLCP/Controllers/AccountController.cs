@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace CRLCP.Controllers
 {
@@ -20,6 +22,7 @@ namespace CRLCP.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
+        
         private IUserRepository _userRepo;
         private readonly AppSettings _appSettings;
         private CLRCP_MASTERContext _masterContext;
@@ -33,7 +36,10 @@ namespace CRLCP.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Register([FromBody]LoginDetails user)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> Register([FromBody]LoginDetails user)
         {
             try
             {
@@ -52,10 +58,10 @@ namespace CRLCP.Controllers
                         QualificationId = -1
 
                     });
-                _masterContext.SaveChanges();
+                await _masterContext.SaveChangesAsync();
                 return Created("", user.UserId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -63,16 +69,18 @@ namespace CRLCP.Controllers
 
         [AllowAnonymous]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof((bool IsAuthenticate, string Token, int UserType)), StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
         public IActionResult Login([FromBody] LoginModel login)
         {
-            var user = _userRepo.Authenticate(login);
+            var user =  _userRepo.Authenticate(login);
             if (user == null)
-                return Unauthorized(new
-                {
-                    IsAuthenticate = false,
-                    Token = string.Empty,
-                    UserType = 0
-                }) ;
+                return Unauthorized((
+                    IsAuthenticate: false,
+                    Token: string.Empty,
+                    UserType: 0
+                )) ;
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);

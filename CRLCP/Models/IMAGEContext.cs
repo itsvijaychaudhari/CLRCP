@@ -22,7 +22,7 @@ namespace CRLCP.Models
 //            if (!optionsBuilder.IsConfigured)
 //            {
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-//                optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=IMAGE;Integrated Security=True;");
+//                optionsBuilder.UseSqlServer("Data Source=10.208.10.142;Initial Catalog=IMAGE;Persist Security Info=True;User ID=sa;Password=sa@Admin");
 //            }
 //        }
 
@@ -40,6 +40,8 @@ namespace CRLCP.Models
                 entity.Property(e => e.AddedOn)
                     .HasColumnName("ADDED_ON")
                     .HasColumnType("datetime");
+
+                entity.Property(e => e.AdditionalInfo).HasColumnName("ADDITIONAL_INFO");
 
                 entity.Property(e => e.DatasetId).HasColumnName("DATASET_ID");
 

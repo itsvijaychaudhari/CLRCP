@@ -39,7 +39,8 @@ namespace CRLCP
             services.AddDbContext<IMAGEContext>(options => options.UseSqlServer(Configuration.GetConnectionString("IMAGEConnectionString")));
             services.AddDbContext<ImageToTextContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ImageToTextConnectionString")));
             services.AddDbContext<TextToTextContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TextToTextConnectionString")));
-
+            services.AddDbContext<VALIDATION_INFOContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ValidationInfoConnectionString")));
+           
             services.AddScoped<IUserRepository, UserService>();
            
             var appSettingsSection = Configuration.GetSection("AppSettings");

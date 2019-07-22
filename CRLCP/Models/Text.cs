@@ -12,5 +12,6 @@ namespace CRLCP.Models
         public int LangId { get; set; }
         public int DomainId { get; set; }
         public int DatasetId { get; set; }
+        public string AdditionalInfo { get; set; }
     }
 }
