@@ -15,7 +15,7 @@ namespace CRLCP.Models
         {
         }
 
-        public virtual DbSet<ValidationResponseDetail> ValidationResponseDetail { get; set; }
+        public virtual DbSet<TextspeechValidationResponseDetail> TextspeechValidationResponseDetail { get; set; }
 
 //        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //        {
@@ -30,19 +30,22 @@ namespace CRLCP.Models
         {
             modelBuilder.HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
 
-            modelBuilder.Entity<ValidationResponseDetail>(entity =>
+            modelBuilder.Entity<TextspeechValidationResponseDetail>(entity =>
             {
-                entity.HasKey(e => e.AutoId);
+                entity.HasKey(e => e.AutoId)
+                    .HasName("PK_VALIDATION_RESPONSE_DETAIL");
 
-                entity.ToTable("VALIDATION_RESPONSE_DETAIL");
+                entity.ToTable("TEXTSPEECH_VALIDATION_RESPONSE_DETAIL");
 
                 entity.Property(e => e.AutoId).HasColumnName("AUTO_ID");
 
+                entity.Property(e => e.IsClear).HasColumnName("IS_CLEAR");
+
+                entity.Property(e => e.IsMatch).HasColumnName("IS_MATCH");
+
+                entity.Property(e => e.NoCrossTalk).HasColumnName("NO_CROSS_TALK");
+
                 entity.Property(e => e.RefAutoid).HasColumnName("REF_AUTOID");
-
-                entity.Property(e => e.SubcategoryId).HasColumnName("SUBCATEGORY_ID");
-
-                entity.Property(e => e.ValidationDetail).HasColumnName("VALIDATION_DETAIL");
 
                 entity.Property(e => e.ValidationFlag).HasColumnName("VALIDATION_FLAG");
             });

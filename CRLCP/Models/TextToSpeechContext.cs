@@ -63,7 +63,11 @@ namespace CRLCP.Models
                     .IsRequired()
                     .HasColumnName("OUTPUT_DATA");
 
+                entity.Property(e => e.TotalValidationUsersCount).HasColumnName("TOTAL_VALIDATION_USERS_COUNT");
+
                 entity.Property(e => e.UserId).HasColumnName("USER_ID");
+
+                entity.Property(e => e.VoteCount).HasColumnName("VOTE_COUNT");
             });
         }
     }

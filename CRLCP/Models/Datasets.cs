@@ -10,5 +10,6 @@ namespace CRLCP.Models
         public string Description { get; set; }
         public int? MaxCollectionUsers { get; set; }
         public int? MaxValidationUsers { get; set; }
+        public int? IsVisible { get; set; }
     }
 }

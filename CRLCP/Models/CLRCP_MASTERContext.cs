@@ -17,6 +17,7 @@ namespace CRLCP.Models
 
         public virtual DbSet<Categories> Categories { get; set; }
         public virtual DbSet<DatasetSubcategoryMapping> DatasetSubcategoryMapping { get; set; }
+        public virtual DbSet<DatasetSubcategoryMappingValidation> DatasetSubcategoryMappingValidation { get; set; }
         public virtual DbSet<Datasets> Datasets { get; set; }
         public virtual DbSet<DomainIdMapping> DomainIdMapping { get; set; }
         public virtual DbSet<LanguageIdMapping> LanguageIdMapping { get; set; }
@@ -82,6 +83,19 @@ namespace CRLCP.Models
                 entity.Property(e => e.SourceSubcategoryId3).HasColumnName("SOURCE_SUBCATEGORY_ID3");
             });
 
+            modelBuilder.Entity<DatasetSubcategoryMappingValidation>(entity =>
+            {
+                entity.HasKey(e => e.AutoId);
+
+                entity.ToTable("DATASET_SUBCATEGORY_MAPPING_VALIDATION");
+
+                entity.Property(e => e.AutoId).HasColumnName("AUTO_ID");
+
+                entity.Property(e => e.DatasetId).HasColumnName("DATASET_ID");
+
+                entity.Property(e => e.DestinationSubcategoryId).HasColumnName("DESTINATION_SUBCATEGORY_ID");
+            });
+
             modelBuilder.Entity<Datasets>(entity =>
             {
                 entity.HasKey(e => e.DatasetId);
@@ -94,6 +108,8 @@ namespace CRLCP.Models
                     .IsRequired()
                     .HasColumnName("DESCRIPTION")
                     .HasMaxLength(250);
+
+                entity.Property(e => e.IsVisible).HasColumnName("IS_VISIBLE");
 
                 entity.Property(e => e.MaxCollectionUsers).HasColumnName("MAX_COLLECTION_USERS");
 
