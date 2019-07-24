@@ -22,13 +22,15 @@ namespace CRLCP.Controllers
         private readonly TextToTextContext textContext;
         private readonly IMAGEContext iMAGEContext;
         private readonly ImageToTextContext imageToTextContext;
+        private readonly JsonResponse jsonResponse;
 
         public ProcessController(CLRCP_MASTERContext context, 
                                 TEXTContext TEXTContext, 
                                 TextToSpeechContext textToSpeech, 
                                 TextToTextContext textContext, 
                                 IMAGEContext iMAGEContext,
-                                ImageToTextContext imageToTextContext)
+                                ImageToTextContext imageToTextContext,
+                                JsonResponse jsonResponse)
         {
             _context = context;
             _TEXTContext = TEXTContext;
@@ -36,9 +38,13 @@ namespace CRLCP.Controllers
             this.textContext = textContext;
             this.iMAGEContext = iMAGEContext;
             this.imageToTextContext = imageToTextContext;
+            this.jsonResponse = jsonResponse;
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> Uploadfile(int UserId,int DataId,int DatasetId,IFormFile file)
         {
             DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Find(DatasetId);
@@ -64,17 +70,22 @@ namespace CRLCP.Controllers
                         var s = TextToSpeech.TextSpeech.ToList();
                         TextToSpeech.TextSpeech.Add(textSpeech);
                         TextToSpeech.SaveChanges();
-                        return Ok("true");
+                        jsonResponse.IsSuccessful = true;
+                        jsonResponse.Response = "File Uploaded Successfully";
+                        return Ok(jsonResponse);
 
                     }
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest("false");
+                    jsonResponse.IsSuccessful = false;
+                    jsonResponse.Response = "Internal Exception";
+                    return BadRequest(jsonResponse);
                 }
             }
-            return Ok("false");
-            
+            jsonResponse.IsSuccessful = false;
+            jsonResponse.Response = "Table Not Found.";
+            return NotFound(jsonResponse);
         }
         
        
@@ -85,10 +96,13 @@ namespace CRLCP.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetText(int DatasetId, int UserId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
+        public IActionResult GetText(int DatasetId, int UserId, int langId, int DomainId)
         {
             
-            int langId = _context.UserInfo.FirstOrDefault(x => x.UserId == UserId).LangId1;
+            //int langId = _context.UserInfo.FirstOrDefault(x => x.UserId == UserId).LangId1;
 
             DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Where(x => x.DatasetId == DatasetId).SingleOrDefault();
             if (datasetSubcategoryMapping != null)
@@ -101,44 +115,37 @@ namespace CRLCP.Controllers
                     //List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId== langId).Select(user => user.DataId).ToList();
                     if (destTableName.Name == "TextSpeech")
                     {
-                        List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId == langId).Select(user => user.DataId).ToList();
+                        List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId && x.LangId == langId && x.DomainId == DomainId).Select(user => user.DataId).ToList();
                         List<int> UserData = TextToSpeech.TextSpeech.Where(user => user.UserId == UserId).Select(user => user.DataId ).Distinct().ToList();
-                        try
+                        List<int> linq = sentences.Except(UserData).ToList();
+                        return Ok(new
                         {
-                            List<int> linq = sentences.Except(UserData).ToList();
-                            return Ok(new { Text = _TEXTContext.Text.Find(linq.First()).Text1, DataId = linq.First() });
-                        }
-                        catch (Exception)
-                        {
-                            return BadRequest();
-                        }
+                            Text = _TEXTContext.Text.Find(linq.First()).Text1,
+                            DataId = linq.First()
+                        });
                     }
                     else if (destTableName.Name == "TextText")
                     {
                        //langId = 24;//TODO
                         List<int> sentences = _TEXTContext.Text.Where(x => x.DatasetId == DatasetId ).Select(user => user.DataId).ToList();
                         List<int> textText = textContext.TextText.Where(x => x.DatasetId == DatasetId).Select(user => user.DataId).ToList();
-                        try
+                        List<int> linq = sentences.Except(textText).ToList();
+                        return Ok(new
                         {
-                            
-                            List<int> linq = sentences.Except(textText).ToList();
-                            return Ok(new { Text = _TEXTContext.Text.Find(linq.First()).Text1, DataId = linq.First() });
-                        }
-                        catch (Exception)
-                        {
-                            return BadRequest();
-                        }
+                            Text = _TEXTContext.Text.Find(linq.First()).Text1,
+                            DataId = linq.First()
+                        });
                     }
-                    return BadRequest();
                 }
-                return BadRequest();
             }
-            return BadRequest();
-
+            return NotFound();
         }
 
         
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
         public IActionResult GetImage(int DatasetId, int UserId)
         {
             DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Where(x => x.DatasetId == DatasetId).SingleOrDefault();
@@ -163,27 +170,19 @@ namespace CRLCP.Controllers
                     if (destTableName.Name == "ImageText")
                     {
                         List<long> UserData = imageToTextContext.ImageText.Where(user => user.UserId == UserId).Select(user => user.DataId).Distinct().ToList();
-                        try
-                        {
-                            List<long> linq = Images.Except(UserData).ToList();
-
-                            return Ok(new { ImageString = iMAGEContext.Images.Find(linq.First()).Image, DataId = linq.First() });
-                        }
-                        catch (Exception)
-                        {
-                            return BadRequest();
-                        }
+                        List<long> linq = Images.Except(UserData).ToList();
+                        return Ok(new { ImageString = iMAGEContext.Images.Find(linq.First()).Image, DataId = linq.First() });
                     }
-                    
-                    return BadRequest();
                 }
-                return BadRequest();
             }
-            return BadRequest();
+            return NotFound();
         }
 
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
         public IActionResult UploadText(int UserId, int DataId, int DatasetId, string Text,int LangId=0)
         {
             DatasetSubcategoryMapping datasetSubcategoryMapping = _context.DatasetSubcategoryMapping.Where(x => x.DatasetId == DatasetId).SingleOrDefault();
@@ -229,13 +228,20 @@ namespace CRLCP.Controllers
                     };
                     textContext.TextText.Add(textText);
                     textContext.SaveChanges();
-                    return Ok(false);
+                    jsonResponse.IsSuccessful = true;
+                    jsonResponse.Response = "Text aved";
+                    return Ok(jsonResponse);
                 }
                 catch (Exception)
                 {
+                    jsonResponse.IsSuccessful = false;
+                    jsonResponse.Response = "Text not saved";
+                    return BadRequest(jsonResponse);
                 }
             }
-            return Ok(false);
+            jsonResponse.IsSuccessful = false;
+            jsonResponse.Response = "Text not saved";
+            return BadRequest(jsonResponse);
         }
 
     }

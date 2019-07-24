@@ -129,7 +129,7 @@ namespace CRLCP.Models
 
                 entity.Property(e => e.DomainId).HasColumnName("DOMAIN_ID");
 
-                entity.Property(e => e.Value)
+                entity.Property(e => e.Name)
                     .IsRequired()
                     .HasColumnName("VALUE")
                     .HasMaxLength(100);

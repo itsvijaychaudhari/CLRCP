@@ -55,6 +55,8 @@ namespace CRLCP.Models
                     .HasMaxLength(1)
                     .IsUnicode(false);
 
+                entity.Property(e => e.IsAddedInDataset).HasColumnName("IS_ADDED_IN_DATASET");
+
                 entity.Property(e => e.IsValid).HasColumnName("IS_VALID");
 
                 entity.Property(e => e.LangId).HasColumnName("LANG_ID");

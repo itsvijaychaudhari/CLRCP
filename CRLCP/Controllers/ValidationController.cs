@@ -19,6 +19,7 @@ namespace CRLCP.Controllers
         private readonly IMAGEContext iMAGEContext;
         private readonly ImageToTextContext imageToTextContext;
         private readonly VALIDATION_INFOContext validationInfoContext;
+        private readonly JsonResponse jsonResponse;
 
         public ValidationController(CLRCP_MASTERContext context,
                                 TEXTContext TEXTContext,
@@ -26,7 +27,8 @@ namespace CRLCP.Controllers
                                 TextToTextContext textContext,
                                 IMAGEContext iMAGEContext,
                                 ImageToTextContext imageToTextContext,
-                                VALIDATION_INFOContext ValidationInfoContext)
+                                VALIDATION_INFOContext ValidationInfoContext,
+                                JsonResponse jsonResponse)
         {
             this.context = context;
             _TEXTcontext = TEXTContext;
@@ -35,6 +37,7 @@ namespace CRLCP.Controllers
             this.iMAGEContext = iMAGEContext;
             this.imageToTextContext = imageToTextContext;
             validationInfoContext = ValidationInfoContext;
+            this.jsonResponse = jsonResponse;
         }
 
         [HttpGet]
@@ -62,8 +65,13 @@ namespace CRLCP.Controllers
                     {
                         if (max_collection_user != 0)
                         {
-                            ValidationTextSpeechModel validationTextSpeechModel = textToSpeech.TextSpeech.Where(x => x.UserId != UserId && x.IsValid == null
+                            List<long> sentences = validationInfoContext.TextspeechValidationResponseDetail.Where(x => x.UserId == UserId).Select(e => e.RefAutoid).ToList();
+                            List<long> sentences1 = textToSpeech.TextSpeech.Where(x => x.UserId != UserId && x.IsValid == null
                                                && x.TotalValidationUsersCount < max_collection_user && x.LangId == LanguageId && x.DomainId == DomainId)
+                                              .Select(e => e.AutoId).ToList();
+                            long id = sentences1.Except(sentences).FirstOrDefault();
+
+                            ValidationTextSpeechModel validationTextSpeechModel = textToSpeech.TextSpeech.Where(x=>x.AutoId == id)
                                                .Select(e => new ValidationTextSpeechModel
                                                {
                                                    DestAutoId = e.AutoId,
@@ -72,6 +80,17 @@ namespace CRLCP.Controllers
                                                }).FirstOrDefault();
                             validationTextSpeechModel.SourceData = _TEXTcontext.Text.Where(x => x.DataId == validationTextSpeechModel.SourceDataId).Select(e => e.Text1).FirstOrDefault();
                             validationTextSpeechModel.DatasetID = DatasetId;
+
+                            /*ValidationTextSpeechModel validationTextSpeechModel = textToSpeech.TextSpeech.Where(x => x.UserId != UserId && x.IsValid == null
+                                               && x.TotalValidationUsersCount < max_collection_user && x.LangId == LanguageId && x.DomainId == DomainId )
+                                               .Select(e => new ValidationTextSpeechModel
+                                               {
+                                                   DestAutoId = e.AutoId,
+                                                   SourceDataId = e.DataId,
+                                                   DestinationData = e.OutputData
+                                               }).FirstOrDefault();
+                            validationTextSpeechModel.SourceData = _TEXTcontext.Text.Where(x => x.DataId == validationTextSpeechModel.SourceDataId).Select(e => e.Text1).FirstOrDefault();
+                            validationTextSpeechModel.DatasetID = DatasetId;*/
                             return Ok(validationTextSpeechModel);
                         }
                         return NotFound();
@@ -88,7 +107,7 @@ namespace CRLCP.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult SetValidationData_TextSpeech(int DestAutoId , int DatasetId,int IsMatch,int NoCrossTalk, int IsClear)
+        public IActionResult SetValidationData_TextSpeech(int UserId,int DestAutoId , int DatasetId,int IsMatch,int NoCrossTalk, int IsClear)
         {
             DatasetSubcategoryMappingValidation datasetSubcategoryMappingValidation = context.DatasetSubcategoryMappingValidation
                                                            .Where(x => x.DatasetId == DatasetId)
@@ -99,12 +118,19 @@ namespace CRLCP.Controllers
 
                 if (destTableNameValidation.Name == "TEXTSPEECH_VALIDATION_RESPONSE_DETAIL")
                 {
+                    int IsValidFlag = 0;
+                    if (IsMatch == 1 && NoCrossTalk == 1 && IsClear == 1)
+                    {
+                        IsValidFlag = 1;
+                    }
                     validationInfoContext.TextspeechValidationResponseDetail.Add(new TextspeechValidationResponseDetail
                     {
+                        UserId = UserId,
                         RefAutoid = DestAutoId,
                         IsMatch = IsMatch,
                         NoCrossTalk = NoCrossTalk,
-                        IsClear = IsClear
+                        IsClear = IsClear,
+                        ValidationFlag = IsValidFlag
                     });
 
                     
@@ -127,6 +153,7 @@ namespace CRLCP.Controllers
                                 if (IsMatch == 1 && NoCrossTalk == 1 && IsClear == 1)
                                 {
                                     textSpeech.VoteCount += 1;
+                                    
                                 }
                                 int? maxValidationUsers = context.Datasets.Where(x => x.DatasetId == DatasetId)
                                                            .Select(x => x.MaxValidationUsers)
@@ -149,18 +176,21 @@ namespace CRLCP.Controllers
                                     }
                                     catch (Exception)
                                     {
-
-                                        return BadRequest("Internal Exception");
+                                        jsonResponse.Response = "Internal Exception";
+                                        return BadRequest(jsonResponse);
                                     }
-                                    return Ok("Saved");
+                                    jsonResponse.IsSuccessful = true;
+                                    jsonResponse.Response = "Saved";
+                                    return Ok(jsonResponse);
                                 }
                             }
                         }
                     }
                 }
-                return NotFound("Destination Not Found");
             }
-            return BadRequest("Invalid request");
+            jsonResponse.IsSuccessful = false;
+            jsonResponse.Response = "Details not match";
+            return NotFound(jsonResponse);
         }
     }
 }

@@ -47,6 +47,8 @@ namespace CRLCP.Models
 
                 entity.Property(e => e.RefAutoid).HasColumnName("REF_AUTOID");
 
+                entity.Property(e => e.UserId).HasColumnName("USER_ID");
+
                 entity.Property(e => e.ValidationFlag).HasColumnName("VALIDATION_FLAG");
             });
         }

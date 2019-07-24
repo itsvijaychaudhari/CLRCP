@@ -28,18 +28,17 @@ namespace CRLCP.Controllers
         private ImageToTextContext _imageToTextContext;
         private TextToTextContext _textToTextContext;
 
-       
-       
-
         public DashboardController(CLRCP_MASTERContext context,
-            TEXTContext textContext, TextToSpeechContext textToSpeechContext, 
-            IMAGEContext imageContext, ImageToTextContext imageToTextContext, 
-            TextToTextContext textToTextContext, IOptions<AppSettings> appSettings)
+                                   TEXTContext textContext, 
+                                   TextToSpeechContext textToSpeechContext,
+                                   IMAGEContext imageContext, 
+                                   ImageToTextContext imageToTextContext,
+                                   TextToTextContext textToTextContext, 
+                                   IOptions<AppSettings> appSettings)
         {
             _context = context;
             _textContext = textContext;
             _textToSpeechContext = textToSpeechContext;
-            
             _imageContext = imageContext;
             _imageToTextContext = imageToTextContext;
             _textToTextContext = textToTextContext;
@@ -108,8 +107,6 @@ namespace CRLCP.Controllers
                 //return BadRequest(new { message = ex.Message });
             }
         }
-
-
 
         [HttpGet]    //API TO GET HOMEPAGE DASHBOARD COUNTS user wise (ADMIN HOMEPAGE)
         public List<UserWiseDataCountModel> GetHomePageCountUserWise()

@@ -18,5 +18,6 @@ namespace CRLCP.Models
         public int? TotalValidationUsersCount { get; set; }
         public int? VoteCount { get; set; }
         public int? IsValid { get; set; }
+        public int? IsAddedInDataset { get; set; }
     }
 }

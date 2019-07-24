@@ -27,6 +27,9 @@ namespace CRLCP
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+           
+
             services.AddCors();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSwaggerGen(c =>
@@ -42,6 +45,7 @@ namespace CRLCP
             services.AddDbContext<VALIDATION_INFOContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ValidationInfoConnectionString")));
            
             services.AddScoped<IUserRepository, UserService>();
+            services.AddTransient<JsonResponse, JsonResponse>();
            
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
@@ -108,6 +112,7 @@ namespace CRLCP
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
+                
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "CLRCP Web API");
             });
             app.UseAuthentication();

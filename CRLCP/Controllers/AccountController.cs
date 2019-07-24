@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -11,9 +10,10 @@ using CRLCP.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CRLCP.Controllers
 {
@@ -24,13 +24,15 @@ namespace CRLCP.Controllers
     {
         
         private IUserRepository _userRepo;
+        private readonly JsonResponse jsonResponse;
         private readonly AppSettings _appSettings;
         private CLRCP_MASTERContext _masterContext;
 
-        public AccountController(CLRCP_MASTERContext context, IUserRepository userService, IOptions<AppSettings> appSettings)
+        public AccountController(CLRCP_MASTERContext context, IUserRepository userService, IOptions<AppSettings> appSettings, JsonResponse jsonResponse)
         {
             _masterContext = context;
             _userRepo = userService;
+            this.jsonResponse = jsonResponse;
             _appSettings = appSettings.Value;
         }
 
@@ -106,14 +108,17 @@ namespace CRLCP.Controllers
         }
 
         [HttpPost]
-        public string Update([FromBody] UserInfo userInfo)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
+        public IActionResult Update([FromBody] UserInfo userInfo)
         {
             try
             {
                 UserInfo user = _masterContext.UserInfo.FirstOrDefault(x=>x.UserId==userInfo.UserId);
                 if (user == null)
                 {
-                    return "User Not Found";
+                    return NotFound(jsonResponse.Response="User Not Found");
                 }
                 else
                 {
@@ -124,30 +129,36 @@ namespace CRLCP.Controllers
                     user.LangId2 = userInfo.LangId2;
                     user.LangId3 = userInfo.LangId3;
                     user.QualificationId = userInfo.QualificationId;
-                   
-                    _masterContext.UserInfo.Update(user);
-                    _masterContext.SaveChanges();
-                    return "Profile Update successfully.";
+                    try
+                    {
+                        _masterContext.UserInfo.Update(user);
+                        _masterContext.SaveChanges();
+                        jsonResponse.IsSuccessful = true;
+                        jsonResponse.Response = "Profile Update successfully.";
+                        return Ok(jsonResponse);
+                    }
+                    catch (Exception)
+                    {
+                        jsonResponse.IsSuccessful = false;
+                        jsonResponse.Response = "Internal Exception.";
+                        return BadRequest(jsonResponse);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                return "Unable to Update Profile";
+                return BadRequest(jsonResponse.Response = "Unable to Update Profile");
             }
         }
 
        
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
         public IActionResult GetProfile(int UserId)
         {
-            try
-            {
-                return Ok(_masterContext.UserInfo.FirstOrDefault(x => x.UserId == UserId));
-            }
-            catch (Exception)
-            {
-                return NotFound();
-            }
+            return Ok(_masterContext.UserInfo.FirstOrDefault(x => x.UserId == UserId));
         }
         
 
